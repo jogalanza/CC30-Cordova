@@ -10,8 +10,6 @@
               <v-btn icon v-on="on1" @click.stop="handleDialog(on)">
                 <v-icon>mdi-calendar-month</v-icon>
               </v-btn>
-
-
             </template>
             <span>Select Period</span>
           </v-tooltip>
@@ -30,10 +28,10 @@
               </v-col>
             </v-row>
             <v-select ref="selectQtr" v-if="local_periodFilters.selectedPeriod.value === 2" :items="qtr_type" v-model="local_periodFilters.selectedQtr" dense label="Quarter" outlined></v-select>
-            <v-select ref="selectYear" :items="year_type" v-model="local_periodFilters.selectedYear" dense label="Year" outlined></v-select>
+            <v-select ref="selectYear" :items="yearSelections" v-model="local_periodFilters.selectedYear" dense label="Year" outlined></v-select>
 
           </v-card-text>
-          <v-card-actions>
+          <v-card-actions style="padding:16px;padding-right:24px">
             <v-spacer></v-spacer>
             <v-btn color="green darken-1" text @click="periodDialog = false">Cancel</v-btn>
             <v-btn color="green darken-1" dark @click="checkPeriodSelection">Update</v-btn>
@@ -101,7 +99,6 @@ export default {
       },
     ],
     // selectedPeriod: null,
-    year_type: [2016, 2017, 2018, 2019, 2020],
     qtr_type: [1, 2, 3, 4],
     workWeeks: [],
     weekLabel1: 'Work Week',
@@ -182,6 +179,14 @@ export default {
         this.$store.commit('setSelectedWW2', value);
       },
     },
+    yearSelections:{
+      get(){
+        return this.$store.state.yearSelections
+      },
+      set(value){
+        this.$store.commit('setYearSelections', value)
+      }
+    }
   },
 
   methods: {
@@ -236,7 +241,7 @@ export default {
         .then((response) => {
           console.log('checkYearRange', response.data);
           const years = response.data.result;
-          _this.year_type = [...years];
+          _this.yearSelections = [...years];
         })
         .catch((error) => {
           console.warn('PeriodSelectDialog.checkMinWW', error);

@@ -178,7 +178,7 @@
       </template> -->
 
       <template v-slot:cell()="row">
-        <div class="text-padding" @click="selectedItem($event, row)" @focus="selectedItem($event, row)" tabindex="0">{{ row.value }}</div>
+        <div class="cell-display" @focus="selectedItem($event, row)" tabindex="0">{{ row.value }}</div>
       </template>
 
       
@@ -204,13 +204,18 @@
       </template>
 
       <template slot="top-row">
-        <td ref="topRow" colspan="12" style="text-align:center">Jared</td>
+        <td id="topRow" ref="topRow" colspan="12" style="text-align:center;height:1px">
+          <div v-if="topLoading" style="padding:10px">
+            <b-spinner  class="align-middle" style="width:20px;height:20px;margin-right:10px;color:red"></b-spinner>
+          Loading...
+          </div>
+        </td>
       </template>
 
       <template slot="custom-foot">
         <!-- <span>{{ calcItems(data.column) }}</span> -->
-        <th ref="bottomRow" colspan="12" style="text-align:center;padding:0px">
-          <div v-if="false" style="padding:10px">
+        <th id="bottomRow" ref="bottomRow" colspan="12" style="text-align:center;padding:0px;height:40">
+          <div v-if="bottomLoading" style="padding:10px">
             <b-spinner  class="align-middle" style="width:20px;height:20px;margin-right:10px;color:red"></b-spinner>
           Loading...
           </div>
@@ -224,12 +229,29 @@
 </template>
 
 <style>
-/* .backlog-grid .table.b-table > tbody > .table-active, .table.b-table > tbody > .table-active > th,
-.backlog-grid .table.b-table > tbody > .table-active > td {
-    background-color: lightseagreen;
-} */
+.backlog-grid .input-text {
+    background-color: pink;
+    display: block;
+    top: 0px;
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    padding-left:5px;
+}
+.backlog-grid .cell-display {
+    background-color: yellow;
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    width: 100%;
+    display: block;
+    padding-top: 10px;
+}
 .backlog-grid tr.row-class > td {
   padding: 0px;
+  height: 40px;
+    position: relative;
+    display: table-cell;
 }
 .backlog-grid .text-padding{
   padding: 0.5rem;
@@ -312,6 +334,10 @@ export default {
     },
   },
   data: () => ({
+    topLoading: false,
+    bottomLoading: false,
+    loadDirection: 'down',
+    loadMoreTop: true,
     defCount: null,
     filterOn: [
       'site',
@@ -326,6 +352,11 @@ export default {
       'partDescription',
     ],
     items: [],
+    pagination: {
+      page: 1,
+      itemsPerPage: 32,
+      maxPage: 10
+    },
     targetObj: {
       element: null,
       text: '',
@@ -360,18 +391,42 @@ export default {
         }
       }
     },
+    removeItem(e){
+      console.log('removeItem', e)
+      var val = e.target.value
+       if (this.targetObj.rowItem && this.targetObj.key){
+          this.$set(this.targetObj.rowItem, this.targetObj.key, val)
+        } 
+      e.target.removeEventListener('blur', null)
+      e.target.remove()
+    },
     selectedItem(event, row){
-      console.log('selectedItem', event, row)
-      if (this.targetObj.element){
-        this.targetObj.element.removeEventListener('blur', this.assignValue)
-      }
-      event.target.offsetParent.tabIndex = 0
+      console.log('selectedItem', event, row, row.item.value)
+      // if (this.targetObj.element){
+      //   this.targetObj.element.removeEventListener('blur', this.assignValue)
+      // }
       this.targetObj.text = ''
       this.targetObj.rowItem = row.item
       this.targetObj.key = row.field.key
-      //event.target.addEventListener('blur', this.assignValue)
-      this.targetObj.element = event.target.offsetParent
-      this.targetObj.element.focus()
+      var input = document.createElement("input");
+      input.type = "text";
+      input.className = 'input-text'
+      input.value = row.value || ''
+      input.addEventListener('blur', this.removeItem)
+      event.target.appendChild(input)
+      //this.targetObj.element = event.target
+      input.focus()
+
+      /**
+       * Target: TD
+       */
+      // event.target.offsetParent.tabIndex = 0
+      // this.targetObj.text = ''
+      // this.targetObj.rowItem = row.item
+      // this.targetObj.key = row.field.key
+      // //event.target.addEventListener('blur', this.assignValue)
+      // this.targetObj.element = event.target.offsetParent
+      // this.targetObj.element.focus()
     },
     onFiltered(filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
@@ -386,35 +441,97 @@ export default {
     },
     colwidthCalc(key) {
       return {
-        width: key === 'col1' ? '100px'
+        width: key === 'col1' ? '160px'
           : (key === 'comments' || key === 'customerName' || key === 'reason' || key === 'partDescription') ? '120px'
             : (key === 'MonthName' || key === 'Year') ? '60px'
               : (key === 'defBacklog') ? '120px'
               : (key === 'action') ? '30px'
+              : (key === 'RowNum') ? '50px'
+              : (key === 'ProductFamily') ? '160px'
                 : '80px',
       };
     },
     GetBacklogs(){
       var _this = this
-      this.$http.post(`deferredbacklog/1/5`, this.periodFilters)
+      this.$http.post(`deferredbacklog/1/5`, {
+        periodFilter: this.periodFilters,
+        pagination: this.pagination
+      })
         .then((response) => {
           if (response.data !== ''){
-            _this.items = [...response.data.result]
-          }
+            if (_this.pagination.page === 1){
+              _this.items = [...response.data.result]
+            }else if(_this.pagination.page > 1 && response.data.result.length > 0){
+              _this.items = [...response.data.result]
+            }            
+          }         
         })
         .catch((error) => {
           console.error(error)
         })
+        .finally(() => {
+          _this.topLoading = false
+          _this.bottomLoading = false
+          _this.ResetScrolls()
+        })
+    },
+    ResetScrolls(){
+      this.$nextTick(() => {
+        if (this.loadDirection === 'down'){
+          console.log('resetting scroll top')
+          this.$refs.gridtable.$el.scrollTop = 100
+        }else{
+          console.log('resetting scroll bottom')
+          this.$refs.gridtable.$el.scrollTop = 200  //this.$refs.gridtable.$el.scrollHeight - 200
+        }
+      })
+      
+    },
+    RefreshTable(){
+      this.pagination.page = 1
+      this.GetBacklogs()
     },
     scrollTrigger(){
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           console.log(entry)
+          if (entry.isIntersecting){
+            if (entry.target.id === 'bottomRow'){
+              console.log('scroll down, load more')
+              this.LoadMoreDown()
+            }else{
+              console.log('scroll up, load more', this.$refs.gridtable.$el.scrollTop)
+              //this.LoadMoreUp()
+              this.loadMoreTop = true
+            } 
+          }          
         })
       })
 
-      observer.observe(this.$refs.gridtable.$children[2].$el)
-    }
+      if (this.$refs.topRow) observer.observe(this.$refs.topRow)
+      if (this.$refs.bottomRow) observer.observe(this.$refs.bottomRow)
+    },
+    LoadMoreDown(){
+      this.pagination.page++
+      this.bottomLoading = true
+      this.loadDirection = 'down'
+      this.GetBacklogs()
+    },
+    LoadMoreUp(){
+      if (this.pagination.page === 1) return
+      this.pagination.page--
+      if (this.pagination.page < 1) this.pagination.page = 1
+      this.topLoading = true
+      this.loadDirection = 'up'
+      this.GetBacklogs()
+    },
+    TableScroll(e){
+      console.log('TableScroll', e.target.scrollTop, e.target.scrollHeight)
+      if (this.loadMoreTop && e.target.scrollTop === 0){
+        this.loadMoreTop = false
+        this.LoadMoreUp()
+      }
+    },
   },
   computed: {
     ...mapGetters({
@@ -422,10 +539,11 @@ export default {
       periodDescription: 'getPeriodDescription',
       periodFilters: 'getPeriodFilters'
     }),
-  },
+  },  
   mounted() {
-    console.log('backloggrid updated', this.$refs, this.$refs.gridtable.$children[2].$el);
-    this.$eventHub.$on('period-changed', this.GetBacklogs)
+    console.log('backloggrid mounted', this.$refs.gridtable.$el);
+    this.$refs.gridtable.$el.addEventListener('scroll', this.TableScroll)
+    this.$eventHub.$on('period-changed', this.RefreshTable)
     console.log('backloggrid mounted', this.$refs.gridtable.$children[2].$el);
     this.defCount = this.calcItems('defBacklog');
     this.GetBacklogs()
@@ -440,14 +558,15 @@ export default {
     //   }      
     // }.bind(this));
 
-    window.addEventListener("keydown", this.onKeyDown);
+    //window.addEventListener("keydown", this.onKeyDown);
   },
   beforeDestroy(){
-    this.$eventHub.$off('period-changed', this.GetBacklogs)
-    window.removeEventListener("keydown", this.onKeyDown);
+    this.$eventHub.$off('period-changed', this.RefreshTable)
+    this.$refs.gridtable.$el.removeEventListener('scroll', this.TableScroll)
+    //window.removeEventListener("keydown", this.onKeyDown);
   },
   updated(){
-    console.log('backloggrid updated', this.$refs, this.$refs.gridtable.$children[2].$el);
+    //console.log('backloggrid updated', this.$refs, this.$refs.gridtable.$children[2].$el);
   }
 };
 </script>

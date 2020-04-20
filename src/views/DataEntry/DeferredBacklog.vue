@@ -4,65 +4,27 @@
       <v-toolbar-title style="color:white">
         Deferred Backlog
         <span v-if="periodDescription !== ''">{{ ` : ${periodDescription} ${localCurrency ? '(Local Currency)' : ''}` }}</span>
+        <span v-if="editMode" style="color:red">(Edit Mode)</span>
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
 
-      <v-divider vertical></v-divider>
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon v-on="on" @click="addNewClicked">
-            <v-icon>mdi-database-plus</v-icon>
-          </v-btn>
-        </template>
-        <span>Add New Item</span>
-      </v-tooltip>
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon v-on="on">
-            <v-icon>mdi-delete-alert</v-icon>
-          </v-btn>
-        </template>
-        <span>Delete Selected Items</span>
-      </v-tooltip>
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon v-on="on">
-            <v-icon>mdi-content-save</v-icon>
-          </v-btn>
-        </template>
-        <span>Save Changes</span>
-      </v-tooltip>
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon v-on="on">
-            <v-icon>mdi-refresh</v-icon>
-          </v-btn>
-        </template>
-        <span>Refresh Data</span>
-      </v-tooltip>
-
-      <v-divider vertical></v-divider>
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon v-on="on" @click="selectMode = !selectMode">
-            <v-icon>{{ selectMode ? 'mdi-checkbox-multiple-marked-outline' : 'mdi-checkbox-multiple-blank-outline'}}</v-icon>
-          </v-btn>
-        </template>
-        <span>{{ selectMode ? 'Turn Off Multi-Select Mode' : 'Turn On Multi-Select Mode'}}</span>
-      </v-tooltip>
-
-      <v-btn icon>
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
+      <ExpandExport 
+        target="defbacklog-grid"
+        :hide-export-level="true" 
+        :hide-export-all="false" 
+        :hide-save-all="false"
+        :hide-currency="true"
+        :hide-expand="true"
+        :hide-add-new="false"
+        :hide-delete="false"
+        :hide-edit="true"
+        :hide-import="false"
+        :edit-mode="editMode"
+        />
     </v-toolbar>
 
-    <v-toolbar>
+    <v-toolbar style="height:60px;box-shadow:none"> 
       <v-spacer />
       <v-text-field
         v-model="filter"
@@ -77,25 +39,43 @@
 
       <v-select
         dense
-        :items="sites"
+        :items="userSites"
         v-model="activeSite"
         label="Sites"
-        item-text="siteName"
-        item-value="siteid"
+        item-text="col1"
+        item-value="col1"
         outlined
         hide-details
+        @change="SiteChanged"
         style="margin-right:10px;width:10px;min-width:200px;max-width:200px"
       ></v-select>
     </v-toolbar>
     <div style="padding:10px;height:100vh;overflow-y:auto">
       <v-container style="padding-top:0px">
+        <div>
+          
+        </div>
           <BackLogGrid 
             id="BackLogGrid"
+            ref="BackLogGrid"
+            target-name="defbacklog-grid"
             :read-only="readOnly" 
             :filter="filter" 
-            :select-mode="selectMode" />
+            :site-filter="activeSite"
+            :select-mode="selectMode"
+            :edit-mode="true"
+            :data-entry-mode="true" />
       </v-container>      
     </div>
+
+    <UploadDialog 
+      ref="uploadDialog"
+      title="Import Deferred Backlog"
+      upload-api="invoke/uploaddata"
+      paste-api="invoke/pastedata"
+      model-api="deferredbacklog/getmodel"
+      :fields="fields"
+       />
 
     <BackLogEntry ref="backlogEntry" />
   </v-card>
@@ -106,7 +86,7 @@
     max-width: 1485px;
     margin-left: auto;
     margin-right: auto;
-    box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+    box-shadow: 0px 0px 4px rgba(0,0,0,0.5);
     border-radius: 4px;
 }
 #BackLogGrid {
@@ -125,63 +105,25 @@
 
 <script>
 // @ is an alias to /src
-import { mapGetters } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 
 export default {
   name: 'DeferredBacklog',
   components: {
-    BackLogGrid: () => import('../../components/BackLogDialog/BackLogGrid.vue'),
+    BackLogGrid: () => import('../../components/BackLogDialog/BackLogQGrid.vue'),
     BackLogEntry: () => import('../../components/DeferredBacklog/BackLogEntry.vue'),
+    ExpandExport: () => import('../../components/General/ExpandExport.vue'),
+    UploadDialog: () => import('../../components/General/UploadDialog.vue')
   },
   data: () => ({
     localCurrency: false,
     activeSite: null,
     selectMode: false,
+    editMode: false,
     readOnly: false,
     filter: null,
     panel: [],
-    items: [
-      {
-        siteId: 1,
-        siteName: 'Asslar',
-        products: [
-          { productId: 1, productName: 'Optics' },
-          { productId: 2, productName: 'Optics 2' },
-          { productId: 3, productName: 'Optics 3' },
-          { productId: 4, productName: 'Optics 4' },
-        ],
-      },
-      {
-        siteId: 2,
-        siteName: 'Batam',
-        products: [
-          { productId: 1, productName: 'New Product' },
-          { productId: 2, productName: 'Product 2' },
-          { productId: 3, productName: 'Product 3' },
-          { productId: 4, productName: 'Product 4' },
-        ],
-      },
-      {
-        siteId: 3,
-        siteName: 'Manila',
-        products: [
-          { productId: 1, productName: 'New Product' },
-          { productId: 2, productName: 'Product 2' },
-          { productId: 3, productName: 'Product 3' },
-          { productId: 4, productName: 'Product 4' },
-        ],
-      },
-      {
-        siteId: 4,
-        siteName: 'Montreal',
-        products: [
-          { productId: 1, productName: 'New Product' },
-          { productId: 2, productName: 'Product 2' },
-          { productId: 3, productName: 'Product 3' },
-          { productId: 4, productName: 'Product 4' },
-        ],
-      },
-    ],
+    items: [],
   }),
   methods: {
     addNewClicked(e, x) {
@@ -194,16 +136,50 @@ export default {
     none() {
       this.panel = [];
     },
+    SiteChanged(){
+      this.$nextTick(() => {
+        console.log('RefreshTable', this.$refs)
+        this.$refs.BackLogGrid.RefreshTable()
+      })
+    },
+    ToggleEditMode(){
+      this.editMode = !this.editMode
+      this.$nextTick(() =>{
+        this.$refs.BackLogGrid.RefreshTable()
+      })
+    },
+    ImportFile(){
+      this.$refs.uploadDialog.InvokeDialog()
+    }
   },
   computed: {
     ...mapGetters({
       sites: 'getSites',
+      fields: 'getBackLogFields',
       periodDescription: 'getPeriodDescription',
-      periodFilters: 'getPeriodFilters'
+      periodFilters: 'getPeriodFilters',
+      userSites: 'getDataEntrySiteFilter'
     }),
+    // userSites:{
+    //   get(){
+    //     return this.$store.state.userInfo.siteAccess
+    //   }
+    // }
   },
   mounted() {
-    this.configurePeriodDialog([2], false);
+    this.configurePeriodDialog([2], false)
+    this.$eventHub.$on('edit-entry', this.ToggleEditMode)
+    this.$eventHub.$on('import-file', this.ImportFile)
+    var self = this
+    this.$nextTick(() => {
+      console.log('deferred backlog mounted', self, this)
+      if (self.userSites && self.userSites.length > 0) self.activeSite = self.userSites[0].col1
+      //self.SiteChanged()
+    })    
   },
+  beforeDestroy(){
+    this.$eventHub.$off('edit-entry', this.ToggleEditMode)
+    this.$eventHub.$off('import-file', this.ImportFile)
+  }
 };
 </script>

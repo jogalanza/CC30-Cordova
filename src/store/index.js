@@ -175,7 +175,7 @@ export default new Vuex.Store({
       year: null,
     },
     periodFilters: {
-      selectedPeriod: { value: 1, text: 'Annual' },
+      selectedPeriod: { value: 2, text: 'Quarter' },
       selectedMonth: { value: 1, text: 'January' },
       selectedYear: 2019,
       selectedWW1: 1,
@@ -184,9 +184,12 @@ export default new Vuex.Store({
       showWOW: [],
       showOneWeek: false,
       showPeriodSelect: true,
-      periodDescription: ''
+      periodDescription: '',
+      showDialogButton: false
     },
-
+    yearSelections: [],
+    monthSelections: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    holdTypes: [],
     // Report and Data entry fields
     SAB_fields: [
       {
@@ -331,12 +334,21 @@ export default new Vuex.Store({
       },
     ],
     BackLog_fields: [
+      // {
+      //   key: 'action', label: '', sortable: false, class: 'text-center',
+      // },
       {
-        key: 'action', label: '', sortable: false, class: 'text-center',
+        key: 'RowNum', name: 'RowNum', field: 'RowNum',  label: '#', sortable: false, class: 'text-center',
+      },
+      {
+        key: 'Site', name: 'Site', field: 'Site', label: 'Site', datatype: 'Site', sortable: true, class: 'text-center',
       },
       {
         key: 'ProductFamily',
+        name: 'ProductFamily',
+        field: 'ProductFamily',
         label: 'Product Family',
+        datatype: 'ProductFamily',
         sortable: true,
         sortDirection: 'desc',
         thStyle: { 'min-width': '230px', 'z-index': 5 },
@@ -351,36 +363,36 @@ export default new Vuex.Store({
       // },
       // {
       //   key: 'productFamily', label: 'Product Family', sortable: true, class: 'text-center',
-      // },
+      // },      
       {
-        key: 'SiteName', label: 'Site', sortable: true, class: 'text-center',
+        key: 'Year', name: 'Year', field: 'Year', label: 'Year',  datatype: 'Year', sortable: true, class: 'text-center',
       },
       {
-        key: 'Year', label: 'Year', sortable: true, class: 'text-center',
+        key: 'Month', name: 'Month', field: 'Month', label: 'Month', datatype: 'Month', sortable: true, class: 'text-center',
       },
       {
-        key: 'MonthName', label: 'Month', sortable: true, class: 'text-center',
+        key: 'DeferredBacklog', name: 'DeferredBacklog',field: 'DeferredBacklog', label: 'Deferred Backlog Amount', datatype: 'Currency', sortable: true, class: 'text-center',
       },
       {
-        key: 'DeferredBacklog', label: 'Deferred Backlog Amount', sortable: true, class: 'text-center',
+        key: 'HoldTypeName',name: 'HoldTypeName', field: 'HoldTypeName',  label: 'Type', datatype: 'HoldType', sortable: true, class: 'text-center',
       },
       {
-        key: 'PONumber', label: 'PO No.', sortable: true, class: 'text-center',
+        key: 'PONumber',name: 'PONumber', field: 'PONumber',  label: 'PO No.', datatype: 'text', sortable: true, class: 'text-center',
       },
       {
-        key: 'PartNo', label: 'Part No.', sortable: true, class: 'text-center',
+        key: 'PartNo', name: 'PartNo', field: 'PartNo', label: 'Part No.', datatype: 'text', sortable: true, class: 'text-center',
       },
       {
-        key: 'Comments', label: 'Comments', sortable: true, class: 'text-center',
+        key: 'Comments', name: 'Comments', field: 'Comments', label: 'Comments', datatype: 'text', sortable: true, class: 'text-center',
       },
       {
-        key: 'Reason', label: 'Reason', sortable: true, class: 'text-center',
+        key: 'Reason', name: 'Reason', field: 'Reason', label: 'Reason', datatype: 'text', sortable: true, class: 'text-center',
       },
       {
-        key: 'CustomerName', label: 'Customer Name', sortable: true, class: 'text-center',
+        key: 'CustomerName', name: 'CustomerName', field: 'CustomerName', label: 'Customer Name', datatype: 'text', sortable: true, class: 'text-center',
       },
       {
-        key: 'PartDescription', label: 'Part Description', sortable: true, class: 'text-center',
+        key: 'PartDescription', name: 'PartDescription', field: 'PartDescription', label: 'Part Description', datatype: 'text', sortable: true, class: 'text-center',
       },
     ],
     BackLogEntry_fields: [
@@ -696,7 +708,6 @@ export default new Vuex.Store({
       { index: 10, name: 'Oct' },
       { index: 11, name: 'Nov' },
       { index: 12, name: 'Dec' },
-
     ],
     currencies: [
       {
@@ -734,6 +745,12 @@ export default new Vuex.Store({
     setUserInfo(state, payload){
       state.userInfo = {...payload}
     },
+    setYearSelections(state, payload){
+      state.yearSelections = [...payload]
+    },
+    setHoldTypes(state, payload){
+      state.holdTypes = [...payload]
+    },
     configPeriodDialog(state, payload) {
       // console.log('store.configPeriodDialog', payload)
       if (payload.selectedTypes && payload.selectedTypes.length > 0) {
@@ -747,6 +764,7 @@ export default new Vuex.Store({
 
       state.periodFilters.showPeriodSelect = payload.showPeriodSelect;
       state.periodFilters.showWOW = [...payload.showWOW];
+      state.periodFilters.showDialogButton = payload.showDialogButton
     },
     setPeriodFilterToCurrent(state) {
       state.periodFilters.selectedMonth.value = state.current_period.month;
@@ -781,6 +799,19 @@ export default new Vuex.Store({
       const x = { ...value };
       state.current_period = x;
     },
+    setFieldLabels(state, value){
+      console.log('setFieldLabels', value)
+      const modPropInfo = value;
+
+      //Backlog Entry fields
+      state.BackLog_fields.forEach(element => {
+        for(var x=0; x < modPropInfo.length; x++){
+          if (element.key === modPropInfo[x].Property) {
+            element.label = modPropInfo[x].HeaderLabel
+          }
+        }
+      });
+    }
   },
   actions: {
   },
@@ -908,5 +939,14 @@ export default new Vuex.Store({
     getMonths: (state) => state.months,
     getFXRateFields: (state) => state.currencies,
     getUserMaintenanceFields: (state) => state.UserMaintenance_fields,
+    getDataEntrySiteFilter: (state) => {
+      var result = [{col1: 'All'}]
+      if (state.userInfo.siteAccess){
+        state.userInfo.siteAccess.map(element => {
+          result.push(element)
+        })
+      }      
+      return result   
+    }
   },
 });

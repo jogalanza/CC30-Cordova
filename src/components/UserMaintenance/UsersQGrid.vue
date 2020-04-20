@@ -26,7 +26,7 @@
 
        <template v-slot:header="props">
         <q-tr :props="props">
-          <q-th>
+          <q-th style="width:40px">
               <v-checkbox :value="selected.length > 0" @click.stop="toggleSelectAll"
             ></v-checkbox>
           </q-th>
@@ -53,6 +53,7 @@
             v-for="col in props.cols"
             :key="col.name"
             :props="props"
+            :style="colwidthCalc(col.name)"
           >
           <template v-if="col.name === 'siteAccess'">
             <div v-if="props.row.roleId > 2 && props.row.restriction === 1" style="display:inline-block;white-space:normal">
@@ -73,8 +74,8 @@
           </template> -->
           <template v-else-if="col.name === 'productAccess'">
             <div v-if="props.row.roleId > 2 && props.row.restriction === 2" style="display:inline-block;white-space:normal">
-              <v-chip v-for="(site, index) in col.value" :key="index" color="primary" x-small style="margin:2px">
-                {{ site.productFamilyName }}
+              <v-chip v-for="(product, index) in col.value" :key="index" color="primary" x-small style="margin:2px">
+                {{ product.ProductFamily }}
               </v-chip>
             </div>
           </template>
@@ -193,6 +194,9 @@ export default {
     items1: [],
   }),
   methods: {
+    checkObject(obj){
+      console.log('Check Object', obj)
+    },
     userEdit(data){
       this.$eventHub.$emit('user-edit', data)
     },
@@ -255,11 +259,11 @@ export default {
     colwidthCalc(key) {
       return {
         width: key === 'username' ? '100px'
-          : key === 'name' ? '200px'
+          : key === 'name' ? '120px'
             : key === 'acctType' ? '60px'
               : key === 'action' ? '90px'
                 : key === 'selector' ? '50px'
-                  : '100%',
+                  : '160px',
       };
     },
     refreshData() {

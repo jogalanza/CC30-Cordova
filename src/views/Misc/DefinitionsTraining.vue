@@ -102,11 +102,9 @@ export default {
     }),
   },
   mounted() {
-    this.$hub.sayhello();
-    this.$eventHub.$on('defbacklog-clicked', this.defbacklogClicked);
+    this.HidePeriodSelector()
   },
   beforeDestroy() {
-    this.$eventHub.$off('defbacklog-clicked', this.defbacklogClicked);
   },
   updated() {
   },

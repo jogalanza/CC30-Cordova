@@ -7,13 +7,13 @@
         </template> -->
         <v-card>
           <v-card-title class="headline" style="margin-bottom:12px">{{ caller && caller.title ? caller.title : 'Confirm' }}</v-card-title>
-          <v-card-text style="padding-bottom:0px">
+          <v-card-text style="padding-bottom:12px;color:black">
             {{ caller && caller.message ? caller.message : 'Do you want to continue?' }}
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="green darken-1" text @click="CancelClicked">Cancel</v-btn>
-            <v-btn color="green darken-1" ref='btnOK' @click="OKClicked">OK</v-btn>
+            <v-btn color="green darken-1" dark ref='btnOK' @click="OKClicked">OK</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -42,8 +42,9 @@ export default {
       this.caller = null
     },
     OKClicked(){
+      console.log('OKClicked', this.caller)
       if (this.caller && this.caller.callback){
-        var target = this.caller.target
+        var target = this.caller.Target
         target[this.caller.callback]()
       }
       this.caller = null
@@ -51,10 +52,10 @@ export default {
     }
   },
   mounted() {
-    this.$eventHub.$on('show-confirm', this.showConfirm)
+    this.$eventHub.$on('show-confirm-dialog', this.showConfirm)
   },
   beforeDestroy(){
-    this.$eventHub.$off('show-confirm', this.showConfirm)
+    this.$eventHub.$off('show-confirm-dialog', this.showConfirm)
   }
 };
 </script>

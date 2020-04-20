@@ -197,6 +197,7 @@ export default {
     }),
   },
   mounted() {
+    this.HidePeriodSelector()
     this.refreshData();
     this.$eventHub.$on('user-edit', this.userEditClicked)
     this.$eventHub.$on('refresh-users', this.refreshData)

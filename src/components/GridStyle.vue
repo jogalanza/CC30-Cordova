@@ -132,9 +132,17 @@ row headers version 2 - bundled cell
     left: 0px;
 }
 
+.cc-app-dark thead > tr > th{
+    background-color: #444 !important;
+    color: white !important;
+    font-weight: normal;
+    border-right: 1px solid #444;
+}
+
 .fixed-rowheader-color{
     background-color: #eee !important;
 }
+
 thead .white-header {
   background-color: white !important;
 }

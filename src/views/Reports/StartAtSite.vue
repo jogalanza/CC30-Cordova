@@ -25,6 +25,7 @@
         :local-currency="localCurrency"
         :dataAPI="getDataAPI"
         :auto-expand="expand"
+        :start-at-site="true"
       />
     </div>
   </v-card>
@@ -111,6 +112,17 @@ export default {
       this.expand = !this.expand;
       this.$refs.SASGridMain.refreshData();
     },
+    Handle_DefBacklog_Click(row, level) {
+      console.log('Handle_DefBacklog_Click', row, level)
+      var info = {
+        startAtSite: true,
+        level: level,
+        key: parseInt(row.item._key),
+        mainInfo: row.item,
+        weeklyMode: false
+      }
+      this.$eventHub.$emit('invoke-deferred-backlog-dialog', info)
+    },
   },
   computed: {
     ...mapGetters({
@@ -127,6 +139,7 @@ export default {
     this.$eventHub.$on('toggle-expand', this.toggleExpand)
     this.$eventHub.$on('toggle-currency', this.switchCurrency)
     this.$eventHub.$on('refresh', this.updateTable)
+    this.$eventHub.$on('deferred-backlog-clicked', this.Handle_DefBacklog_Click);
     this.configurePeriodDialog([1, 2, 3, 4], true);
   },
   beforeDestroy() {
@@ -134,6 +147,7 @@ export default {
     this.$eventHub.$off('toggle-expand', this.toggleExpand) 
     this.$eventHub.$off('toggle-currency', this.switchCurrency)
     this.$eventHub.$off('refresh', this.updateTable)
+    this.$eventHub.$off('deferred-backlog-clicked', this.Handle_DefBacklog_Click);
   },
   updated() {
   },

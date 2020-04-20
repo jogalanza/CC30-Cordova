@@ -5,5 +5,5 @@
 	 * PRD:
 	 */
     if (window.cashcall === undefined) window.cashcall = {};
-	window.cashcall.serverAddress = 'http://etcfrewebqa01:8000/'
+	window.cashcall.serverAddress = 'http://localhost:3567/'
 })();

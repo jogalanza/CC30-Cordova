@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="sessionDialog" persistent max-width="400" no-click-animation>
+  <v-dialog v-model="sessionDialog" persistent max-width="400" overlay-opacity="0.85" no-click-animation>
         <!-- <template v-slot:activator="{ on }">
           <v-btn icon @click.stop="handleDialog(on)">
             <v-icon>mdi-calendar-month</v-icon>
@@ -7,11 +7,11 @@
         </template> -->
         <v-card>
           <v-card-title class="headline" style="margin-bottom:12px;background-color:#eee">Session Expired</v-card-title>
-          <v-card-text style="padding-bottom:0px">
+          <v-card-text style="padding-bottom:16px">
             <div style="font-size:1.2rem;color:black">Do you want to continue?</div>
-            <div style="margin-top:10px">This will require page refresh and all unsaved work will be lost</div>             
+            <div style="margin-top:10px;color:black">This will require page refresh and all unsaved work will be lost</div>             
           </v-card-text>
-          <v-card-actions>
+          <v-card-actions style="padding:16px">
             <v-spacer></v-spacer>
             <v-btn color="green darken-1" text @click="CancelClicked">No</v-btn>
             <v-btn color="green darken-1" dark ref='btnOK' @click="OKClicked" width="100">Yes</v-btn>
@@ -52,10 +52,8 @@ export default {
     }
   },
   mounted() {
-    this.$eventHub.$on('show-confirm', this.showConfirm)
   },
   beforeDestroy(){
-    this.$eventHub.$off('show-confirm', this.showConfirm)
   }
 };
 </script>

@@ -71,8 +71,12 @@ export default {
         selectedTypes: _selectedTypes,
         showPeriodSelect: _showPeriodSelect,
         showWOW: [..._showWOW],
+        showDialogButton: true
       };
       this.$store.commit('configPeriodDialog', payload);
+    },
+    HidePeriodSelector(){
+      this.$store.state.periodFilters.showDialogButton = false
     },
     registerHubID(id) {
       console.log(`Registering hub ${id}`);
@@ -90,5 +94,29 @@ export default {
         .then(() => {
         });
     },
+    SetObjectKeyValue(arr, key, value){
+      arr.forEach(element => {
+        element[key] = value       
+      });
+    },
+    ConfirmDelete(target, callback, message, title){
+      console.log('ConfirmDelete', target, callback, message, title)
+      if (target && callback){
+        var caller = {
+          Target: target,
+          message: message || 'Do you really want to delete this item?',
+          title: title || 'Delete',
+          callback: callback
+        }
+        this.$eventHub.$emit('show-confirm-dialog', caller)
+      }      
+    },
+    NotifyRequestError(_message){
+      var result = {
+        success: false,
+        message: _message
+      }
+      this.$eventHub.$emit('show-alert', result)
+    }
   },
 };

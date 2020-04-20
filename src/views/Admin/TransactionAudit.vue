@@ -349,6 +349,7 @@ export default {
     }),
   },
   mounted() {
+    this.HidePeriodSelector()
   },
   beforeDestroy() {
   },

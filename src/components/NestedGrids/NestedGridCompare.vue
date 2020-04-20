@@ -45,14 +45,14 @@
 
       <template v-slot:cell(DeferredBacklog)="row">
         <template v-if="typeof row.value === 'object' && row.value.length == 2">
-          <div @click="$eventHub.$emit('defbacklog-clicked', row, parentLevel)" style="cursor:pointer">
+          <div @click="$eventHub.$emit('deferred-backlog-clicked', row, parentLevel, alias)" style="cursor:pointer">
             <div :class="numberValStyle(row.value[0])">{{ formatNumber(row.value[0]) }}</div>
             <div :class="numberValStyle(row.value[1])">{{ formatNumber(row.value[1]) }}</div>
             <div :class="numberValStyle(calcVariance(row.value[0], row.value[1], false))">{{ calcVariance(row.value[0], row.value[1]) }}</div>
           </div>
         </template>
         <template v-else>
-          <span @click="$eventHub.$emit('defbacklog-clicked', row, parentLevel)" style="cursor:pointer" :class="numberValStyle(row.value)">{{ formatNumber(row.value) }}</span>
+          <span @click="$eventHub.$emit('deferred-backlog-clicked', row, parentLevel, alias)" style="cursor:pointer" :class="numberValStyle(row.value)">{{ formatNumber(row.value) }}</span>
         </template>
       </template>
 
@@ -342,6 +342,10 @@ export default {
     NestedGrid2: () => import('./NestedGridCompare.vue'),
   },
   props: {
+    alias: {
+      type:String,
+      default: 'default'
+    },
     dataAPI: {
       type: String,
       default: '',
@@ -401,7 +405,7 @@ export default {
     autoExpand: {
       type: Boolean,
       default: false,
-    },
+    }
   },
   data: () => ({
     uid: 1,
@@ -426,7 +430,7 @@ export default {
       }
     },
     checkCurrencyFooterLabel(data) {
-      console.log('testFooterData', data, this.parentLevel, this.localCurrency)
+      //console.log('testFooterData', data, this.parentLevel, this.localCurrency)
       return data.field.footerLabel && this.parentLevel === 2 && this.localCurrency ? data.field.footerLabel : 'USD';
     },
     setCurrencyFooterLabel(data) {
@@ -451,6 +455,7 @@ export default {
         })
         .catch((error) => {
           console.warn(error);
+          this.NotifyRequestError(error)
         })
         .then(() => {
           _this.isBusy = false;

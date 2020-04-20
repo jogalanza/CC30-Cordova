@@ -130,7 +130,7 @@
 
       <v-spacer></v-spacer>
 
-      <v-menu :close-on-content-click="true" open-on-hover bottom offset-y>
+      <v-menu :close-on-content-click="true" bottom offset-y>
         <template v-slot:activator="{ on }">
           <v-btn
             color="primary transparent d-none d-md-flex"
@@ -159,7 +159,7 @@
         </v-list>
       </v-menu>
 
-      <v-menu :close-on-content-click="true" open-on-hover bottom offset-y>
+      <v-menu :close-on-content-click="true" bottom offset-y>
         <template v-slot:activator="{ on }">
           <v-btn
             color="primary transparent d-none d-md-flex"
@@ -188,7 +188,7 @@
         </v-list>
       </v-menu>
 
-      <v-menu :close-on-content-click="true" open-on-hover bottom offset-y>
+      <v-menu :close-on-content-click="true" bottom offset-y>
         <template v-slot:activator="{ on }">
           <v-btn
             color="primary transparent d-none d-md-flex"
@@ -219,7 +219,7 @@
 
       <v-divider vertical style="margin-left:10px" class="mx-4 d-none d-md-flex"></v-divider>
 
-      <PeriodSelectDialog />
+      <PeriodSelectDialog v-if="showPeriodSelect" />
       <ConfirmDialog />
       <SessionTimeout ref='sessionTimeout' />
 
@@ -249,7 +249,7 @@
         </v-list>
       </v-menu>
 
-      <v-menu :close-on-content-click="false" open-on-hover bottom offset-y>
+      <v-menu :close-on-content-click="false" bottom offset-y>
         <template v-slot:activator="{ on }">
           <v-btn icon large v-on="on" class="d-none d-md-flex">
             <v-icon>mdi-account</v-icon>
@@ -281,9 +281,9 @@
 
     <v-snackbar v-model="alert" bottom left :color="alertType">
       {{ alertMsg }}
-      <v-btn color="white" text  @click="alert = false" >
+      <!-- <v-btn color="white" text  @click="alert = false" >
         Close
-      </v-btn>
+      </v-btn> -->
     </v-snackbar>
 
 
@@ -406,6 +406,11 @@ export default {
       period_type: 'getPeriodTypes',
       autoDrill: 'getAutoExpand',
     }),
+    showPeriodSelect:{
+      get(){
+        return this.$store.state.periodFilters.showDialogButton
+      }
+    },
     current_period: {
       get() {
         return this.$store.state.current_period;
@@ -448,6 +453,22 @@ export default {
       if (response.data !== ''){
         console.log(response);
         _this.$store.commit('setUserInfo', response.data.result);
+        _this.GetModulePropInfo()
+      }
+       
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+    },
+    GetModulePropInfo(){
+      console.log('GetModulePropInfo')
+      const _this = this;
+      this.$http.get('/get/propertyinfo')
+      .then((response) => {      
+      if (response.data !== ''){
+        console.log(response);
+        _this.$store.commit('setFieldLabels', response.data.result)
       }
        
       })
@@ -471,10 +492,12 @@ export default {
     this.$eventHub.$on('session-timeout', this.HandleSessionTimeOut)
     this.$hub.$on('update-user-info', this.GetUserInfo)
     
-    setTimeout(() => {
-      this.GetCurrentPeriod()
-      this.GetUserInfo()
-    }, 5000)
+    this.GetCurrentPeriod()
+    this.GetUserInfo()
+
+    // setTimeout(() => {
+      
+    // }, 5000)
   },
   updated(){
     console.log('updated')

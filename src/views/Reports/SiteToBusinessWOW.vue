@@ -10,20 +10,61 @@
 
       <v-spacer></v-spacer>
 
-      <ExpandExport :expand="expand" />
+      <ExpandExport 
+        :expand="expand" 
+        :hide-wow-toggle="false"
+        :integrated-mode="integratedMode"/>
 
     </v-toolbar>
-    <div style="padding:10px;height:100vh">
+    <div v-if="!integratedMode" style="padding:10px;height:calc(100vh - 140px);overflow-y:auto">
+      <div class="week-heading">{{ `WW${periodFilters.selectedWW1}`}}</div>
       <NestGrid
-        id="stbwow"
-        ref="stbwow"
+        class="stbwow-grid"
+        ref="stbwow1"
         :fields="fields"
         :show-child-header="false"
-        :footer-variance-mode="true"
+        :footer-variance-mode="false"
+        :field-width-calc="colwidthCalc"
+        :text-offset-level="offsetLevel"
+        :dataAPI="dataAPIWW1"
+        :auto-expand="expand" />
+
+      <div class="week-heading">{{ `WW${periodFilters.selectedWW2}`}}</div>
+      <NestGrid
+        class="stbwow-grid"
+        ref="stbwow2"
+        :fields="fields"
+        :show-child-header="false"
+        :footer-variance-mode="false"
+        :field-width-calc="colwidthCalc"
+        :text-offset-level="offsetLevel"
+        :dataAPI="dataAPIWW2"
+        :auto-expand="expand" />
+
+      <div class="week-heading">Variance</div>
+      <NestGrid
+        class="stbwow-grid"
+        ref="stbwowvar"
+        :fields="fields"
+        :show-child-header="false"
+        :footer-variance-mode="false"
         :field-width-calc="colwidthCalc"
         :text-offset-level="offsetLevel"
         :dataAPI="dataAPI"
         :auto-expand="expand" />
+    </div>
+    <div v-else style="padding:10px;height:100vh">
+      <NestGrid
+        class="stbwow-grid-main"
+        ref="stbwowmain"
+        :fields="fieldsMain"
+        :show-child-header="false"
+        :footer-variance-mode="true"
+        :field-width-calc="colwidthCalc"
+        :text-offset-level="offsetLevel"
+        :dataAPI="dataAPIMain"
+        :auto-expand="expand"
+        :start-at-site="true" />
     </div>
   </v-card>
 </template>
@@ -31,26 +72,69 @@
 
 </style>
 <style>
-#stbwow .table.b-table > thead > tr > th:nth-child(6),
-#stbwow .table.b-table > tbody > tr > td:nth-child(6),
-#stbwow .table.b-table > tfoot > tr > th:nth-child(6),
-#stbwow .table.b-table > thead > tr > th:nth-child(8),
-#stbwow .table.b-table > tbody > tr > td:nth-child(8),
-#stbwow .table.b-table > tfoot > tr > th:nth-child(8){
+.week-heading{
+  padding-top: 16px;
+  padding-bottom: 2px;
+  font-weight: bold;
+  letter-spacing: 0.15rem;
+  font-size: 1rem;
+  color: .999;
+  max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.stbwow-grid-main.fixed-rowheader > .table.b-table > thead > tr > th:nth-child(2),
+.stbwow-grid-main.fixed-rowheader > .table.b-table > tbody > tr > td:nth-child(2),
+.stbwow-grid-main.fixed-rowheader > .table.b-table > tfoot > tr > th:nth-child(2),
+.stbwow-grid-main .table.b-table > tbody > tr > td:nth-child(2),
+.stbwow-grid-main .table.b-table > tfoot > tr > th:nth-child(2) {
+    text-align: left;
+    position: -webkit-sticky;
+    position: sticky;
+    left: 300px;
+    z-index: 5 !important;
+}
+.stbwow-grid-main.fixed-rowheader > .table.b-table > thead > tr > th:nth-child(2){
+  z-index: 6 !important;
+}
+.stbwow-grid-main .table.b-table > tbody > tr > td:nth-child(2),
+.stbwow-grid-main .table.b-table > tfoot > tr > th:nth-child(2),
+.stbwow-grid-main .table.b-table > thead > tr > th:nth-child(7),
+.stbwow-grid-main .table.b-table > tbody > tr > td:nth-child(7),
+.stbwow-grid-main .table.b-table > tfoot > tr > th:nth-child(7),
+.stbwow-grid-main .table.b-table > thead > tr > th:nth-child(9),
+.stbwow-grid-main .table.b-table > tbody > tr > td:nth-child(9),
+.stbwow-grid-main .table.b-table > tfoot > tr > th:nth-child(9),
+.stbwow-grid .table.b-table > thead > tr > th:nth-child(6),
+.stbwow-grid .table.b-table > tbody > tr > td:nth-child(6),
+.stbwow-grid .table.b-table > tfoot > tr > th:nth-child(6),
+.stbwow-grid .table.b-table > thead > tr > th:nth-child(8),
+.stbwow-grid .table.b-table > tbody > tr > td:nth-child(8),
+.stbwow-grid .table.b-table > tfoot > tr > th:nth-child(8){
   background-color: #eee;
 }
-#stbwow {
+.stbwow-grid,
+.stbwow-grid-main {
     max-width: 1240px;
     margin-left: auto;
     margin-right: auto;
-    padding: 10px;
     padding-top: 0px;
     box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
     border-radius: 4px;
 }
-#stbwow {
+.stbwow-grid {
   max-height: calc(100vh - 160px);
   /* height: calc(100vh - 160px); */
+}
+.stbwow-grid-main {
+  max-height: calc(100vh - 160px);
+  /* height: calc(100vh - 160px); */
+}
+.stbwow-grid-main .wow-label{
+  font-size: 0.7rem;
+  font-weight: normal;
+  text-align: right;
+  color:#999;
 }
 </style>
 <script>
@@ -67,8 +151,10 @@ export default {
   },
   mixins: [mixin,reportEntry],
   data: () => ({
+    integratedMode: false,
     expand: false,
-    dataAPI: '/startatsite/wow/1/1',
+    dataAPI: '/startatsite/wow/var/1/1',
+    dataAPIMain: '/startatsite/wow/1/1',
     offsetLevel: 2,
     items: [],
   }),
@@ -79,7 +165,12 @@ export default {
       };
     },
     updateTable() {
-      if (this.$refs.stbwow) this.$refs.stbwow.refreshData();
+      this.$nextTick(() => {
+        if (this.integratedMode && this.$refs.stbwowmain) this.$refs.stbwowmain.refreshData()
+        if (!this.integratedMode && this.$refs.stbwow1) this.$refs.stbwow1.refreshData();
+        if (!this.integratedMode && this.$refs.stbwow2) this.$refs.stbwow2.refreshData();
+        if (!this.integratedMode && this.$refs.stbwowvar) this.$refs.stbwowvar.refreshData();
+      }) 
     },
     exportReport(level){
       this.$http.post(`setup/export/`, this.periodFilters)
@@ -96,26 +187,40 @@ export default {
     },
     toggleExpand() {
       this.expand = !this.expand;
-      this.$refs.stbwow.refreshData();
+      this.updateTable()
     },
+    ToggleView(){
+      this.integratedMode = !this.integratedMode
+      this.expand = false
+      this.updateTable()
+    }
   },
   computed: {
     ...mapGetters({
+      fieldsMain: 'getWOWFields',
       fields: 'getPriorWeekFields',
       periodDescription: 'getPeriodDescription',
       periodFilters: 'getPeriodFilters',
     }),
+    dataAPIWW1(){
+      return `/startatsite/prior/1/1/${this.periodFilters.selectedWW1}`
+    },
+     dataAPIWW2(){
+      return `/startatsite/prior/1/1/${this.periodFilters.selectedWW2}`
+    }
   },
   mounted() {
     this.$eventHub.$on('period-changed', this.updateTable)
     this.$eventHub.$on('toggle-expand', this.toggleExpand)  
     this.$eventHub.$on('refresh', this.updateTable)
+    this.$eventHub.$on('toggle-compact-view', this.ToggleView)
     this.configurePeriodDialog([2], false, [1, 2]);
   },
   beforeDestroy() {
     this.$eventHub.$off('period-changed', this.updateTable)
     this.$eventHub.$off('toggle-expand', this.toggleExpand) 
     this.$eventHub.$off('refresh', this.updateTable)
+    this.$eventHub.$off('toggle-compact-view', this.ToggleView)
   },
   updated() {
   },

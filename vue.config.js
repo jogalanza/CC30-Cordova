@@ -1,5 +1,5 @@
 module.exports = {
-  publicPath: '',
+  publicPath: process.env.CORDOVA_PLATFORM === 'electron' || process.env.CORDOVA_PLATFORM === 'android' ? '' :  process.env.NODE_ENV === 'production' ? '/clientapp/dist/' : '/',
   productionSourceMap: false,
 
   chainWebpack: (config) => {

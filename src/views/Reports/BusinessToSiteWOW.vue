@@ -10,65 +10,130 @@
 
       <v-spacer></v-spacer>
 
-      <ExpandExport :expand="expand" />
+      <ExpandExport 
+        :expand="expand" 
+        :hide-wow-toggle="false"
+        :integrated-mode="integratedMode"/>
    
     </v-toolbar>
-    <div style="padding:10px;height:100vh">
+    <div v-if="!integratedMode" style="padding:10px;height:calc(100vh - 140px);overflow-y:auto">
+      <div class="week-heading">{{ `WW${periodFilters.selectedWW1}`}}</div>
       <NestGrid
-        id="btswow"
+        class="btswow-grid"
+        ref="btswow1"
+        alias="btswow1"
+        :fields="fields"
+        :show-child-header="false"
+        :footer-variance-mode="false"
+        :field-width-calc="colwidthCalc"
+        :text-offset-level="offsetLevel"
+        :dataAPI="dataAPIWW1"
+        :auto-expand="expand" />
+
+      <div class="week-heading">{{ `WW${periodFilters.selectedWW2}`}}</div>
+      <NestGrid
+        class="btswow-grid"
+        ref="btswow2"
+        alias="btswow2"
+        :fields="fields"
+        :show-child-header="false"
+        :footer-variance-mode="false"
+        :field-width-calc="colwidthCalc"
+        :text-offset-level="offsetLevel"
+        :dataAPI="dataAPIWW2"
+        :auto-expand="expand" />
+
+      <div class="week-heading">Variance</div>
+      <NestGrid
+        class="btswow-grid"
         ref="btswow"
         :fields="fields"
         :show-child-header="false"
-        :footer-variance-mode="true"
+        :footer-variance-mode="false"
         :field-width-calc="colwidthCalc"
         :text-offset-level="offsetLevel"
         :dataAPI="dataAPI"
         :auto-expand="expand" />
     </div>
+
+    <div v-else style="padding:10px;height:100vh">
+       <NestGrid
+        class="btswow-grid-main"
+        ref="btswowmain"
+        :fields="fieldsMain"
+        :show-child-header="false"
+        :footer-variance-mode="true"
+        :field-width-calc="colwidthCalc"
+        :text-offset-level="offsetLevel"
+        :dataAPI="dataAPIMain"
+        :auto-expand="expand" />
+    </div>
+   
   </v-card>
 </template>
 <style scoped>
 
 </style>
 <style>
-#btswow.fixed-rowheader > .table.b-table > thead > tr > th:nth-child(2),
-#btswow.fixed-rowheader > .table.b-table > tbody > tr > td:nth-child(2),
-#btswow.fixed-rowheader > .table.b-table > tfoot > tr > th:nth-child(2),
-#btswow .table.b-table > tbody > tr > td:nth-child(2),
-#btswow .table.b-table > tfoot > tr > th:nth-child(2) {
+.week-heading{
+  padding-top: 16px;
+  padding-bottom: 2px;
+  font-weight: bold;
+  letter-spacing: 0.15rem;
+  font-size: 1rem;
+  color: #999;
+  max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.btswow-grid-main.fixed-rowheader > .table.b-table > thead > tr > th:nth-child(2),
+.btswow-grid-main.fixed-rowheader > .table.b-table > tbody > tr > td:nth-child(2),
+.btswow-grid-main.fixed-rowheader > .table.b-table > tfoot > tr > th:nth-child(2),
+.btswow-grid-main .table.b-table > tbody > tr > td:nth-child(2),
+.btswow-grid-main .table.b-table > tfoot > tr > th:nth-child(2) {
     text-align: left;
     position: -webkit-sticky;
     position: sticky;
     left: 300px;
     z-index: 5 !important;
 }
-#btswow.fixed-rowheader > .table.b-table > thead > tr > th:nth-child(2){
+.btswow-grid-main.fixed-rowheader > .table.b-table > thead > tr > th:nth-child(2){
   z-index: 6 !important;
 }
-#btswow .table.b-table > tbody > tr > td:nth-child(2),
-#btswow .table.b-table > tfoot > tr > th:nth-child(2),
-#btswow .table.b-table > thead > tr > th:nth-child(7),
-#btswow .table.b-table > tbody > tr > td:nth-child(7),
-#btswow .table.b-table > tfoot > tr > th:nth-child(7),
-#btswow .table.b-table > thead > tr > th:nth-child(9),
-#btswow .table.b-table > tbody > tr > td:nth-child(9),
-#btswow .table.b-table > tfoot > tr > th:nth-child(9){
+.btswow-grid-main .table.b-table > tbody > tr > td:nth-child(2),
+.btswow-grid-main .table.b-table > tfoot > tr > th:nth-child(2),
+.btswow-grid-main .table.b-table > thead > tr > th:nth-child(7),
+.btswow-grid-main .table.b-table > tbody > tr > td:nth-child(7),
+.btswow-grid-main .table.b-table > tfoot > tr > th:nth-child(7),
+.btswow-grid-main .table.b-table > thead > tr > th:nth-child(9),
+.btswow-grid-main .table.b-table > tbody > tr > td:nth-child(9),
+.btswow-grid-main .table.b-table > tfoot > tr > th:nth-child(9),
+.btswow-grid .table.b-table > thead > tr > th:nth-child(6),
+.btswow-grid .table.b-table > tbody > tr > td:nth-child(6),
+.btswow-grid .table.b-table > tfoot > tr > th:nth-child(6),
+.btswow-grid .table.b-table > thead > tr > th:nth-child(8),
+.btswow-grid .table.b-table > tbody > tr > td:nth-child(8),
+.btswow-grid .table.b-table > tfoot > tr > th:nth-child(8){
   background-color: #eee;
 }
-#btswow {
-    max-width: 1240px;
+.btswow-grid,
+.btswow-grid-main {
+    max-width: 1250px;
     margin-left: auto;
     margin-right: auto;
-    padding: 10px;
     padding-top: 0px;
     box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
     border-radius: 4px;
 }
-#btswow {
+.btswow-grid {
+  max-height: inherit;
+  /* height: calc(100vh - 160px); */
+}
+.btswow-grid-main {
   max-height: calc(100vh - 160px);
   /* height: calc(100vh - 160px); */
 }
-#btswow .wow-label{
+.btswow-grid-main .wow-label{
   font-size: 0.7rem;
   font-weight: normal;
   text-align: right;
@@ -89,8 +154,10 @@ export default {
   },
   mixins: [mixin,reportEntry],
   data: () => ({
+    integratedMode: false,
     expand: false,
-    dataAPI: '/startatbusiness/wow/1/1',
+    dataAPIMain: '/startatbusiness/wow/1/1',
+    dataAPI: '/startatbusiness/wow/var/1/1',
     offsetLevel: 5,
     items: [],
   }),
@@ -104,7 +171,12 @@ export default {
       };
     },
     updateTable() {
-      if (this.$refs.btswow) this.$refs.btswow.refreshData();
+      this.$nextTick(() => {
+        if (this.integratedMode && this.$refs.btswowmain) this.$refs.btswowmain.refreshData()
+        if (!this.integratedMode && this.$refs.btswow1) this.$refs.btswow1.refreshData();
+        if (!this.integratedMode && this.$refs.btswow2) this.$refs.btswow2.refreshData();
+        if (!this.integratedMode && this.$refs.btswow) this.$refs.btswow.refreshData();
+      })      
     },
     exportReport(level){ 
       this.$http.post(`setup/export/`, this.periodFilters)
@@ -121,26 +193,57 @@ export default {
     },
     toggleExpand() {
       this.expand = !this.expand;
-      this.$refs.btswow.refreshData();
+      this.updateTable()
+    },
+    ToggleView(){
+      this.integratedMode = !this.integratedMode
+      this.expand = false
+      this.updateTable()
+    },
+    Handle_DefBacklog_Click(row, level, _alias) {
+      console.log('Handle_DefBacklog_Click', row, level, _alias)
+      if (_alias === 'btswow1' || _alias === 'btswow2'){
+        var info = {
+          startAtSite: false,
+          level: level,
+          key: parseInt(row.item._key),
+          mainInfo: row.item,
+          weeklyMode: true,
+          workWeek: _alias === 'btswow1' ? this.periodFilters.selectedWW1 : this.periodFilters.selectedWW2
+        }
+        this.$eventHub.$emit('invoke-deferred-backlog-dialog', info)
+      }
+      
     },
   },
   computed: {
     ...mapGetters({
-      fields: 'getWOWFields',
+      fieldsMain: 'getWOWFields',
+      fields: 'getPriorWeekFields',
       periodDescription: 'getPeriodDescription',
       periodFilters: 'getPeriodFilters',
     }),
+     dataAPIWW1(){
+      return `/startatbusiness/prior/1/1/${this.periodFilters.selectedWW1}`
+    },
+     dataAPIWW2(){
+      return `/startatbusiness/prior/1/1/${this.periodFilters.selectedWW2}`
+    }
   },
   mounted() {
     this.$eventHub.$on('period-changed', this.updateTable);
     this.$eventHub.$on('toggle-expand', this.toggleExpand) 
     this.$eventHub.$on('refresh', this.updateTable)
+    this.$eventHub.$on('toggle-compact-view', this.ToggleView)
+    this.$eventHub.$on('deferred-backlog-clicked', this.Handle_DefBacklog_Click);
     this.configurePeriodDialog([2], false, [1, 2]);
   },
   beforeDestroy() {
     this.$eventHub.$off('period-changed', this.updateTable)
     this.$eventHub.$off('toggle-expand', this.toggleExpand) 
     this.$eventHub.$off('refresh', this.updateTable)
+    this.$eventHub.$off('toggle-compact-view', this.ToggleView)
+    this.$eventHub.$off('deferred-backlog-clicked', this.Handle_DefBacklog_Click);
   },
   updated() {
   },

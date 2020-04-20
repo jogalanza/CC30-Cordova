@@ -35,7 +35,6 @@
     max-width: 1080px;
     margin-left: auto;
     margin-right: auto;
-    padding: 10px;
     padding-top: 0px;
     box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
     border-radius: 4px;
@@ -68,7 +67,7 @@ export default {
   mixins: [mixin,reportEntry],
   data: () => ({
     expand: false,
-    dataAPI: '/startatbusiness/prior/1/1',
+    dataAPI1: `/startatbusiness/prior/1/1`,
     offsetLevel: 5,
     items: [],
   }),
@@ -79,7 +78,9 @@ export default {
       };
     },
     updateTable() {
-      if (this.$refs.btspriormain) this.$refs.btspriormain.refreshData();
+      this.$nextTick(() => {
+        if (this.$refs.btspriormain) this.$refs.btspriormain.refreshData();
+      })          
     },
     exportReport(level){ 
       this.$http.post(`setup/export/`, this.periodFilters)
@@ -98,6 +99,18 @@ export default {
       this.expand = !this.expand;
       this.$refs.btspriormain.refreshData();
     },
+    Handle_DefBacklog_Click(row, level) {
+      console.log('Handle_DefBacklog_Click', row, level)
+      var info = {
+        startAtSite: false,
+        level: level,
+        key: parseInt(row.item._key),
+        mainInfo: row.item,
+        weeklyMode: true,
+        workWeek: this.periodFilters.selectedWW1
+      }
+      this.$eventHub.$emit('invoke-deferred-backlog-dialog', info)
+    },
   },
   computed: {
     ...mapGetters({
@@ -105,17 +118,22 @@ export default {
       periodDescription: 'getPeriodDescription',
       periodFilters: 'getPeriodFilters',
     }),
+    dataAPI(){
+      return `/startatbusiness/prior/1/1/${this.periodFilters.selectedWW1}`
+    }
   },
   mounted() {
     this.$eventHub.$on('period-changed', this.updateTable)
     this.$eventHub.$on('toggle-expand', this.toggleExpand)
     this.$eventHub.$on('refresh', this.updateTable)
+    this.$eventHub.$on('deferred-backlog-clicked', this.Handle_DefBacklog_Click);
     this.configurePeriodDialog([2], false, [1]);
   },
   beforeDestroy() {
     this.$eventHub.$off('period-changed', this.updateTable)
     this.$eventHub.$off('toggle-expand', this.toggleExpand)  
     this.$eventHub.$off('refresh', this.updateTable)
+    this.$eventHub.$off('deferred-backlog-clicked', this.Handle_DefBacklog_Click);
   },
   updated() {
   },
